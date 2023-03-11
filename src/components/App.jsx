@@ -1,26 +1,37 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ContactForm, ContactList, Filter } from './';
 import { nanoid } from 'nanoid';
 import { PhoneBookStyled } from './App.module';
 import { PropTypes } from 'prop-types';
 
-class PhoneBook extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+const LocalKey = 'Contacts';
 
-  addContact = (contact, number) => {
-    let prevContacts = this.state.contacts.map(({ name }) =>
-      name.toLocaleLowerCase()
+const defaultContacts = [
+  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+];
+
+const PhoneBook = () => {
+  const [contacts, setContacts] = useState(() => {
+    return JSON.parse(localStorage.getItem(LocalKey)) ?? defaultContacts;
+  });
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    window.localStorage.setItem(LocalKey, JSON.stringify(contacts));
+  }, [contacts]);
+
+  const filterContacts = () => {
+    return contacts.filter(contact =>
+      contact.name.toLocaleLowerCase().includes(filter)
     );
-    let bool = prevContacts.includes(contact.toLocaleLowerCase());
-    if (bool) {
+  };
+  const addContact = (contact, number) => {
+    let prevContacts = contacts.map(({ name }) => name.toLocaleLowerCase());
+    let isRepeatContact = prevContacts.includes(contact.toLocaleLowerCase());
+    if (isRepeatContact) {
       alert(`${contact} is already in contacts`);
       return;
     }
@@ -30,42 +41,32 @@ class PhoneBook extends Component {
       number: number,
     };
 
-    this.setState(prevState => {
-      prevState.contacts.push(obj);
-      return { contacts: [...prevState.contacts] };
-    });
+    setContacts(prevState => [...prevState, obj]);
   };
-  filter = evt => {
+  const filtered = evt => {
     const filterValue = evt.target.value;
-    this.setState({ filter: filterValue.toLocaleLowerCase() });
+    setFilter(filterValue.toLocaleLowerCase());
   };
 
-  delete = id => {
-    this.setState(prevState => {
-      let x = prevState.contacts.filter(contact => contact.id !== id);
-      return { contacts: [...x] };
+  const deleted = id => {
+    setContacts(prevState => {
+      let contacts = prevState.filter(contact => contact.id !== id);
+      return [...contacts];
     });
   };
 
-  render() {
-    const filterContacts = this.state.contacts.filter(contact =>
-      contact.name.toLocaleLowerCase().includes(this.state.filter)
-    );
-    return (
-      <PhoneBookStyled>
-        <h1>Phonebook</h1>
-        <ContactForm addContact={this.addContact} />
-        <h2>Contacts</h2>
-        <Filter filter={this.filter} />
-        <ContactList contacts={filterContacts} onDelete={this.delete} />
-      </PhoneBookStyled>
-    );
-  }
-}
-export const App = () => {
   return (
-      <PhoneBook />
+    <PhoneBookStyled>
+      <h1>Phonebook</h1>
+      <ContactForm addContact={addContact} />
+      <h2>Contacts</h2>
+      <Filter filter={filtered} />
+      <ContactList contacts={filterContacts} onDelete={deleted} />
+    </PhoneBookStyled>
   );
+};
+export const App = () => {
+  return <PhoneBook />;
 };
 
 PhoneBook.propTypes = {
@@ -77,4 +78,4 @@ PhoneBook.propTypes = {
     })
   ),
   filter: PropTypes.string,
-}
+};

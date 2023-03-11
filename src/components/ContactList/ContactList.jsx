@@ -11,7 +11,7 @@ export const ContactList = ({ contacts, onDelete }) => {
   return (
     <Container>
       <ListOfContact>
-        {contacts.map(({ name, number, id }) => (
+        {contacts().map(({ name, number, id }) => (
           <ContactItem key={id}>
             <Paragraph>Name: {name}</Paragraph>
             <Paragraph>Tel: {number}</Paragraph>
